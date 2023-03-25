@@ -15,6 +15,7 @@ import (
 
 type Config struct {
 	DatabaseURL string `ini:"database_url" cfg:"database_url" cfgRequired:"true" cfgHelper:"Database URL"`
+	Port        int    `ini:"port" cfg:"port" cfgDefault:"8080" cfgHelper:"Port"`
 }
 
 var (
@@ -56,7 +57,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
+	if r.Method == http.MethodGet {
 		index, err := assets.ReadFile("assets/login.html")
 		if err != nil {
 			log.Fatal(err)
@@ -128,13 +129,13 @@ func main() {
 
 	s := &http.Server{
 		Handler:        mux,
-		Addr:           fmt.Sprintf(":%d", 8080),
+		Addr:           fmt.Sprintf(":%d", cfg.Port),
 		ReadTimeout:    5 * time.Second,
 		WriteTimeout:   5 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	log.Printf("Listening on port %d\n", 8080)
+	log.Printf("Listening on port %d\n", cfg.Port)
 	log.Fatal(s.ListenAndServe())
 
 }

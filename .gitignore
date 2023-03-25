@@ -15,4 +15,6 @@ notas.txt
 notes.txt
 .DS_Store
 authorized_keys
+env.sh
+.env
 

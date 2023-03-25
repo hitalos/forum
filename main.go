@@ -105,11 +105,9 @@ func main() {
 	config.File = "config.ini"
 	err := config.Parse(&cfg)
 	if err != nil {
-		println(err)
+		fmt.Println(err)
 		return
 	}
-
-	println(cfg.DatabaseURL)
 
 	const cookieName = "forum_session"
 	sc = session.New(cookieName)
@@ -134,6 +132,8 @@ func main() {
 		WriteTimeout:   5 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
+
+	println(cfg.DatabaseURL)
 
 	log.Printf("Listening on port %d\n", cfg.Port)
 	log.Fatal(s.ListenAndServe())

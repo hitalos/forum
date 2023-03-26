@@ -8,14 +8,22 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dghubble/gologin/v2"
+	"github.com/dghubble/gologin/v2/github"
+	"golang.org/x/oauth2"
+	githubOAuth2 "golang.org/x/oauth2/github"
+
 	"crg.eti.br/go/config"
 	_ "crg.eti.br/go/config/ini"
 	"crg.eti.br/go/session"
 )
 
 type Config struct {
-	DatabaseURL string `ini:"database_url" cfg:"database_url" cfgRequired:"true" cfgHelper:"Database URL"`
-	Port        int    `ini:"port" cfg:"port" cfgDefault:"8080" cfgHelper:"Port"`
+	GithubClientID     string `ini:"github_client_id" cfg:"github_client_id" cfgRequired:"true" cfgHelper:"Github Client ID"`
+	GithubClientSecret string `ini:"github_client_secret" cfg:"github_client_secret" cfgRequired:"true" cfgHelper:"Github Client Secret"`
+	GithubCallbackURL  string `ini:"github_callback_url" cfg:"github_callback_url" cfgRequired:"true" cfgHelper:"Github Callback URL"`
+	DatabaseURL        string `ini:"database_url" cfg:"database_url" cfgRequired:"true" cfgHelper:"Database URL"`
+	Port               int    `ini:"port" cfg:"port" cfgDefault:"8080" cfgHelper:"Port"`
 }
 
 var (
@@ -99,6 +107,54 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", http.StatusFound)
 }
 
+func issueSession() http.Handler {
+	fn := func(w http.ResponseWriter, req *http.Request) {
+		ctx := req.Context()
+		githubUser, err := github.UserFromContext(ctx)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// 2. Implement a success handler to issue some form of session
+		//session.Set(sessionUserKey, *githubUser.ID)
+		//session.Set(sessionUsername, *githubUser.Login)
+		fmt.Println("githubUser id: ", *githubUser.ID)
+		fmt.Println("githubUser login: ", *githubUser.Login)
+		fmt.Println("githubUser email: ", *githubUser.Email)
+		fmt.Println("githubUser name: ", *githubUser.Name)
+		fmt.Println("githubUser avatar: ", *githubUser.AvatarURL)
+		fmt.Println("githubUser url: ", *githubUser.URL)
+		fmt.Println("githubUser html url: ", *githubUser.HTMLURL)
+		fmt.Println("githubUser followers: ", *githubUser.Followers)
+		fmt.Println("githubUser following: ", *githubUser.Following)
+		fmt.Println("githubUser created at: ", *githubUser.CreatedAt)
+
+		//if err := session.Save(w); err != nil {
+		//	http.Error(w, err.Error(), http.StatusInternalServerError)
+		//	return
+		//}
+		http.Redirect(w, req, "/", http.StatusFound)
+	}
+	return http.HandlerFunc(fn)
+}
+
+// profileHandler shows a personal profile or a login button (unauthenticated).
+func profileHandler(w http.ResponseWriter, req *http.Request) {
+	//	session, err := sessionStore.Get(req, sessionName)
+	//	if err != nil {
+	//
+	// welcome with login button
+	//
+	//		page, _ := os.ReadFile("home.html")
+	//		fmt.Fprint(w, string(page))
+	//		return
+	//	}
+	//
+	// authenticated profile
+	//
+	//	fmt.Fprintf(w, `<p>You are logged in %s!</p><form action="/logout" method="post"><input type="submit" value="Logout"></form>`, session.Get(sessionUsername))
+}
+
 func main() {
 	cfg := Config{}
 
@@ -124,6 +180,27 @@ func main() {
 	mux.HandleFunc("/", homeHandler)
 	mux.HandleFunc("/login", loginHandler)
 	mux.HandleFunc("/logout", logoutHandler)
+
+	oauth2Config := &oauth2.Config{
+		ClientID:     cfg.GithubClientID,
+		ClientSecret: cfg.GithubClientSecret,
+		RedirectURL:  cfg.GithubCallbackURL,
+		Endpoint:     githubOAuth2.Endpoint,
+	}
+
+	// state param cookies require HTTPS by default; disable for localhost development
+	stateConfig := gologin.DebugOnlyCookieConfig
+
+	mux.Handle(
+		"/github/login",
+		github.StateHandler(
+			stateConfig,
+			github.LoginHandler(oauth2Config, nil)))
+	mux.Handle(
+		"/github/callback",
+		github.StateHandler(
+			stateConfig,
+			github.CallbackHandler(oauth2Config, issueSession(), nil)))
 
 	s := &http.Server{
 		Handler:        mux,

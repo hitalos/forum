@@ -34,9 +34,11 @@ var (
 )
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("homeHandler")
+
 	sid, sd, ok := sc.Get(r)
 	if !ok {
-		http.Redirect(w, r, "/login", http.StatusFound)
+		//http.Redirect(w, r, "/forum/login/", http.StatusFound)
 		return
 	}
 
@@ -65,6 +67,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("loginHandler")
 	if r.Method == http.MethodGet {
 		index, err := assets.ReadFile("assets/login.html")
 		if err != nil {
@@ -95,19 +98,21 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("logoutHandler")
 	sid, _, ok := sc.Get(r)
 	if !ok {
-		http.Redirect(w, r, "/login", http.StatusFound)
+		//http.Redirect(w, r, "/forum/login", http.StatusFound)
 		return
 	}
 
 	// remove session
 	sc.Delete(w, sid)
 
-	http.Redirect(w, r, "/login", http.StatusFound)
+	//http.Redirect(w, r, "/forum/login", http.StatusFound)
 }
 
 func issueSession() http.Handler {
+	fmt.Println("issueSession")
 	fn := func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 		githubUser, err := github.UserFromContext(ctx)
@@ -133,13 +138,14 @@ func issueSession() http.Handler {
 		//	http.Error(w, err.Error(), http.StatusInternalServerError)
 		//	return
 		//}
-		http.Redirect(w, req, "/", http.StatusFound)
+		http.Redirect(w, req, "/forum", http.StatusFound)
 	}
 	return http.HandlerFunc(fn)
 }
 
 // profileHandler shows a personal profile or a login button (unauthenticated).
 func profileHandler(w http.ResponseWriter, req *http.Request) {
+	fmt.Println("profileHandler")
 	//	session, err := sessionStore.Get(req, sessionName)
 	//	if err != nil {
 	//

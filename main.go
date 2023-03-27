@@ -36,14 +36,14 @@ var (
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("homeHandler")
 
-	sid, sd, ok := sc.Get(r)
-	if !ok {
-		//http.Redirect(w, r, "/forum/login/", http.StatusFound)
-		return
-	}
+	//sid, sd, ok := sc.Get(r)
+	//if !ok {
+	//http.Redirect(w, r, "/forum/login/", http.StatusFound)
+	//	return
+	//}
 
 	// renew session
-	sc.Save(w, sid, sd)
+	//sc.Save(w, sid, sd)
 
 	//////////////////////////
 
@@ -57,8 +57,12 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	// exec template
-	err = t.Execute(w, nil)
+	data := struct {
+		GitHubLoginURL string `json:"github_login_url"`
+	}{
+		GitHubLoginURL: "/forum/github/login",
+	}
+	err = t.Execute(w, data)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -123,16 +127,16 @@ func issueSession() http.Handler {
 		// 2. Implement a success handler to issue some form of session
 		//session.Set(sessionUserKey, *githubUser.ID)
 		//session.Set(sessionUsername, *githubUser.Login)
-		fmt.Println("githubUser id: ", *githubUser.ID)
-		fmt.Println("githubUser login: ", *githubUser.Login)
-		fmt.Println("githubUser email: ", *githubUser.Email)
-		fmt.Println("githubUser name: ", *githubUser.Name)
-		fmt.Println("githubUser avatar: ", *githubUser.AvatarURL)
-		fmt.Println("githubUser url: ", *githubUser.URL)
-		fmt.Println("githubUser html url: ", *githubUser.HTMLURL)
-		fmt.Println("githubUser followers: ", *githubUser.Followers)
-		fmt.Println("githubUser following: ", *githubUser.Following)
-		fmt.Println("githubUser created at: ", *githubUser.CreatedAt)
+		fmt.Println("githubUser id.........:", *githubUser.ID)
+		fmt.Println("githubUser login......:", *githubUser.Login)
+		fmt.Println("githubUser email......:", *githubUser.Email)
+		fmt.Println("githubUser name.......:", *githubUser.Name)
+		fmt.Println("githubUser avatar.....:", *githubUser.AvatarURL)
+		fmt.Println("githubUser url........:", *githubUser.URL)
+		fmt.Println("githubUser html url...:", *githubUser.HTMLURL)
+		fmt.Println("githubUser followers..:", *githubUser.Followers)
+		fmt.Println("githubUser following..:", *githubUser.Following)
+		fmt.Println("githubUser created at.:", *githubUser.CreatedAt)
 
 		//if err := session.Save(w); err != nil {
 		//	http.Error(w, err.Error(), http.StatusInternalServerError)

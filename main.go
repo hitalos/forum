@@ -70,37 +70,6 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	// http.Redirect(w, r, "/payments", http.StatusFound)
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("loginHandler")
-	if r.Method == http.MethodGet {
-		index, err := assets.ReadFile("assets/login.html")
-		if err != nil {
-			log.Fatal(err)
-		}
-		t, err := template.New("login.html").Parse(string(index))
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// exec template
-		err = t.Execute(w, nil)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		return
-	}
-
-	// login logic
-
-	// create session
-	sid, sd := sc.Create()
-
-	// save session
-	sc.Save(w, sid, sd)
-
-}
-
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("logoutHandler")
 	sid, _, ok := sc.Get(r)
@@ -147,24 +116,6 @@ func issueSession() http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-// profileHandler shows a personal profile or a login button (unauthenticated).
-func profileHandler(w http.ResponseWriter, req *http.Request) {
-	fmt.Println("profileHandler")
-	//	session, err := sessionStore.Get(req, sessionName)
-	//	if err != nil {
-	//
-	// welcome with login button
-	//
-	//		page, _ := os.ReadFile("home.html")
-	//		fmt.Fprint(w, string(page))
-	//		return
-	//	}
-	//
-	// authenticated profile
-	//
-	//	fmt.Fprintf(w, `<p>You are logged in %s!</p><form action="/logout" method="post"><input type="submit" value="Logout"></form>`, session.Get(sessionUsername))
-}
-
 func main() {
 	cfg := Config{}
 
@@ -188,7 +139,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", homeHandler)
-	mux.HandleFunc("/login", loginHandler)
+	//mux.HandleFunc("/login", loginHandler)
 	mux.HandleFunc("/logout", logoutHandler)
 
 	oauth2Config := &oauth2.Config{

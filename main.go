@@ -36,14 +36,14 @@ var (
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("homeHandler")
 
-	//sid, sd, ok := sc.Get(r)
-	//if !ok {
-	//http.Redirect(w, r, "/forum/login/", http.StatusFound)
-	//	return
-	//}
+	sid, sd, ok := sc.Get(r)
+	if !ok {
+		fmt.Println("session not found")
+		sid, sd = sc.Create()
+	}
 
 	// renew session
-	//sc.Save(w, sid, sd)
+	sc.Save(w, sid, sd)
 
 	//////////////////////////
 
@@ -58,7 +58,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		GitHubLoginURL string `json:"github_login_url"`
+		GitHubLoginURL string
 	}{
 		GitHubLoginURL: "/forum/github/login",
 	}

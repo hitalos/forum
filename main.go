@@ -76,9 +76,11 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	data := struct {
 		SessionData    *sessionData
 		GitHubLoginURL string
+		LogoutURL      string
 	}{
 		SessionData:    sdAUX,
 		GitHubLoginURL: "/forum/github/login",
+		LogoutURL:      "/forum/logout",
 	}
 	err = t.Execute(w, data)
 	if err != nil {

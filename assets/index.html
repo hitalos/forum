@@ -7,7 +7,12 @@
 
 <body>
     <h1>Forum</h1>
+    {{if .SessionData}}
+    <p>Logged in as {{.SessionData.UserName}}</p>
+    <a href={{.LogoutURL}}>Logout</a>
+    {{else}}
     <a href={{.GitHubLoginURL}}>Login</a>
+    {{end}}
 </body>
 
 </html>

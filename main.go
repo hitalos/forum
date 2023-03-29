@@ -26,6 +26,12 @@ type Config struct {
 	Port               int    `ini:"port" cfg:"port" cfgDefault:"8080" cfgHelper:"Port"`
 }
 
+type sessionData struct {
+	OAuthProvider string
+	UserName      string
+	AvatarURL     string
+}
+
 var (
 	sc *session.Control
 
@@ -57,9 +63,21 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
+	var (
+		sdAUX *sessionData
+	)
+
+	if sd.Data != nil {
+		sdAUX, ok = sd.Data.(*sessionData)
+		if !ok {
+			log.Fatal("type assertion failed sessionData")
+		}
+	}
 	data := struct {
+		SessionData    *sessionData
 		GitHubLoginURL string
 	}{
+		SessionData:    sdAUX,
 		GitHubLoginURL: "/forum/github/login",
 	}
 	err = t.Execute(w, data)
@@ -74,28 +92,32 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("logoutHandler")
 	sid, _, ok := sc.Get(r)
 	if !ok {
-		//http.Redirect(w, r, "/forum/login", http.StatusFound)
+		http.Redirect(w, r, "/forum", http.StatusFound)
 		return
 	}
 
 	// remove session
 	sc.Delete(w, sid)
 
-	//http.Redirect(w, r, "/forum/login", http.StatusFound)
+	http.Redirect(w, r, "/forum", http.StatusFound)
 }
 
 func issueSession() http.Handler {
 	fmt.Println("issueSession")
-	fn := func(w http.ResponseWriter, req *http.Request) {
-		ctx := req.Context()
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 		githubUser, err := github.UserFromContext(ctx)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		// 2. Implement a success handler to issue some form of session
-		//session.Set(sessionUserKey, *githubUser.ID)
-		//session.Set(sessionUsername, *githubUser.Login)
+
+		sid, sd, ok := sc.Get(r)
+		if !ok {
+			fmt.Println("session not found")
+			sid, sd = sc.Create()
+		}
+
 		fmt.Println("githubUser id.........:", *githubUser.ID)
 		fmt.Println("githubUser login......:", *githubUser.Login)
 		fmt.Println("githubUser email......:", *githubUser.Email)
@@ -107,11 +129,16 @@ func issueSession() http.Handler {
 		fmt.Println("githubUser following..:", *githubUser.Following)
 		fmt.Println("githubUser created at.:", *githubUser.CreatedAt)
 
-		//if err := session.Save(w); err != nil {
-		//	http.Error(w, err.Error(), http.StatusInternalServerError)
-		//	return
-		//}
-		http.Redirect(w, req, "/forum", http.StatusFound)
+		sdAUX := sessionData{
+			OAuthProvider: "github",
+			UserName:      *githubUser.Name,
+			AvatarURL:     *githubUser.AvatarURL,
+		}
+		sd.Data = &sdAUX
+
+		sc.Save(w, sid, sd)
+
+		http.Redirect(w, r, "/forum", http.StatusFound)
 	}
 	return http.HandlerFunc(fn)
 }

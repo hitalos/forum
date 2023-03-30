@@ -15,7 +15,8 @@ import (
 
 	"crg.eti.br/go/config"
 	_ "crg.eti.br/go/config/ini"
-	"crg.eti.br/go/session"
+
+	"crg.eti.br/go/forum/session"
 )
 
 type Config struct {
@@ -44,13 +45,24 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	sid, sd, ok := sc.Get(r)
 	if !ok {
-		fmt.Println("session not found")
+		fmt.Println("1 session not found")
 		sid, sd = sc.Create()
+	}
+
+	if sd.Data != nil {
+		sdAUX, ok := sd.Data.(*sessionData)
+		if !ok {
+			log.Fatal("type assertion failed sessionData")
+		}
+		fmt.Println("name:", sdAUX.UserName)
+	} else {
+		fmt.Println("sd.Data is nil")
 	}
 
 	// renew session
 	sc.Save(w, sid, sd)
 
+	fmt.Println("sid:", sid)
 	//////////////////////////
 
 	index, err := assets.ReadFile("assets/index.html")
@@ -87,16 +99,17 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	// http.Redirect(w, r, "/payments", http.StatusFound)
 }
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("logoutHandler")
-	sid, _, ok := sc.Get(r)
+	sid, sd, ok := sc.Get(r)
 	if !ok {
 		http.Redirect(w, r, "/forum", http.StatusFound)
 		return
 	}
+
+	sd.Data = nil
 
 	// remove session
 	sc.Delete(w, sid)
@@ -107,6 +120,12 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 func issueSession() http.Handler {
 	fmt.Println("issueSession")
 	fn := func(w http.ResponseWriter, r *http.Request) {
+		sid, sd, ok := sc.Get(r)
+		if !ok {
+			fmt.Println("2 session not found")
+			sid, sd = sc.Create()
+		}
+
 		ctx := r.Context()
 		githubUser, err := github.UserFromContext(ctx)
 		if err != nil {
@@ -114,12 +133,7 @@ func issueSession() http.Handler {
 			return
 		}
 
-		sid, sd, ok := sc.Get(r)
-		if !ok {
-			fmt.Println("session not found")
-			sid, sd = sc.Create()
-		}
-
+		fmt.Println("sid:", sid)
 		fmt.Println("githubUser id.........:", *githubUser.ID)
 		fmt.Println("githubUser login......:", *githubUser.Login)
 		fmt.Println("githubUser email......:", *githubUser.Email)
@@ -138,6 +152,8 @@ func issueSession() http.Handler {
 		}
 		sd.Data = &sdAUX
 
+		fmt.Println("name:", sdAUX.UserName)
+		// renew session
 		sc.Save(w, sid, sd)
 
 		http.Redirect(w, r, "/forum", http.StatusFound)

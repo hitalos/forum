@@ -4,7 +4,6 @@ go 1.20
 
 require (
 	crg.eti.br/go/config v1.4.13
-	crg.eti.br/go/session v0.0.0-20230317041759-319314abbdda
 	github.com/dghubble/gologin/v2 v2.4.0
 	golang.org/x/oauth2 v0.6.0
 )

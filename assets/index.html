@@ -125,21 +125,6 @@ menu
     console.log("JS socket.onmessage ret: " + ret);
   }
 
-
-  /////////////////////////////////////////////////
-  // update size
-
-  function updateSize() {
-    let inputBackBox = document.getElementById('inputBackBox');
-    let inputFieldBox = document.getElementById('inputFieldBox');
-    inputBackBox.style.height = (inputFieldBox.offsetHeight - 24) + 'px';
-    //inputBackBox.style.width = inputFieldBox.offsetWidth + 'px';
-  }
-
-  updateSize();
-  window.addEventListener('resize', updateSize);
-  /////////////////////////////////////////////////
-
   function loadOldContent() {
     if (window.scrollY != 0) {
       return;
@@ -157,7 +142,6 @@ menu
     document.body.insertBefore(newElement, document.body.firstChild);
 
   }
-
 
   function insertStringAboveForm(string) {
     // const form = document.querySelector('form');
@@ -188,7 +172,7 @@ menu
     scrollToBottom();
 
     // POST
-    fetch("/url/do/seu/servidor", {
+    fetch("http://localhost:8080/post", {
       method: "POST",
       body: JSON.stringify({ input: inputValue }),
       headers: {

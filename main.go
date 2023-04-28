@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/dghubble/gologin/v2"
 	"github.com/dghubble/gologin/v2/github"
-	"golang.org/x/net/websocket"
 	"golang.org/x/oauth2"
 	githubOAuth2 "golang.org/x/oauth2/github"
 
@@ -32,6 +32,7 @@ type sessionData struct {
 	OAuthProvider string
 	UserName      string
 	AvatarURL     string
+	SessionID     string
 }
 
 var (
@@ -40,47 +41,6 @@ var (
 	//go:embed assets/*
 	assets embed.FS
 )
-
-func echoServer(ws *websocket.Conn) {
-	defer ws.Close()
-	ws.MaxPayloadBytes = 1024 * 1024
-	//ws.SetDeadline(time.Now().Add(5 * time.Second))
-
-	// timmer channel
-	//timer := time.After(1 * time.Second)
-
-	go func() {
-		for {
-			err := websocket.Message.Send(ws, "ping")
-			if err != nil {
-				fmt.Println("Error sending to websocket:", err)
-				return
-			}
-			time.Sleep(1 * time.Second)
-		}
-	}()
-
-	for {
-		var message string
-		err := websocket.Message.Receive(ws, &message)
-		if err != nil {
-			fmt.Println("Error reading from websocket:", err)
-			break
-		}
-		fmt.Println("Received message:", message)
-		if message == "pong" {
-			continue
-		}
-		if message == "ping" {
-			message = "pong"
-		}
-		err = websocket.Message.Send(ws, message)
-		if err != nil {
-			fmt.Println("Error sending to websocket:", err)
-			break
-		}
-	}
-}
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("homeHandler")
@@ -191,6 +151,7 @@ func issueSession() http.Handler {
 			OAuthProvider: "github",
 			UserName:      *githubUser.Name,
 			AvatarURL:     *githubUser.AvatarURL,
+			SessionID:     sid,
 		}
 		sd.Data = &sdAUX
 
@@ -250,7 +211,31 @@ func main() {
 			stateConfig,
 			github.CallbackHandler(oauth2Config, issueSession(), nil)))
 
-	mux.Handle("/echo", websocket.Handler(echoServer))
+	// recebe post de usuário
+	mux.HandleFunc("/forum/post", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("postHandler")
+		sid, sd, ok := sc.Get(r)
+		if !ok {
+			http.Redirect(w, r, "/forum", http.StatusFound)
+			return
+		}
+
+		sdAUX, ok := sd.Data.(*sessionData)
+		if !ok {
+			log.Fatal("type assertion failed sessionData")
+		}
+		fmt.Println("name:", sdAUX.UserName)
+
+		var post string
+		err := json.NewDecoder(r.Body).Decode(&post)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		fmt.Println("sid:", sid)
+		fmt.Println("post:", post)
+	})
 
 	s := &http.Server{
 		Handler:        mux,

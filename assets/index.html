@@ -78,53 +78,6 @@ menu
 
 <script>
 
-  ///////////////////////////////////////////////
-  // websocket
-
-
-  var socket = null;
-  function connect_socket() {
-    console.log("JS connect_socket");
-    socket = new WebSocket("ws://localhost:8080/echo");
-    socket.onclose = function (event) {
-      console.log("JS socket.onclose reconnecting...");
-      connect_socket();
-    };
-    socket.onerror = function (event) {
-      console.log("JS socket.onerror reconnecting...");
-      connect_socket();
-    };
-    socket.onopen = function (event) {
-      console.log("JS socket.onopen");
-      //heartbeat();
-    };
-  }
-  connect_socket();
-
-  function sendToServer(bytes) {
-    socket.send(bytes);
-    console.log("JS sendToServer: " + bytes);
-  }
-
-  function heartbeat() {
-    if (!socket) return;
-    if (socket.readyState !== 1) return;
-    //socket.send("ping");
-    setTimeout(heartbeat, 1000);
-  }
-
-  socket.onmessage = function (event) {
-    var receivedBytes = event.data;
-    console.log("JS socket.onmessage: " + receivedBytes);
-    if (receivedBytes == "pong") return;
-    if (receivedBytes == "ping") {
-      //socket.send("pong");
-      return;
-    }
-    ret = writeToScreen(receivedBytes);
-    console.log("JS socket.onmessage ret: " + ret);
-  }
-
   function loadOldContent() {
     if (window.scrollY != 0) {
       return;
@@ -172,10 +125,11 @@ menu
     scrollToBottom();
 
     // POST
-    fetch("http://localhost:8080/post", {
+    fetch("http://localhost:8080/forum/port", {
       method: "POST",
       body: JSON.stringify({ input: inputValue }),
       headers: {
+        "forum_session": "{{.SessionData.SessionID}}",
         "Content-Type": "application/json",
       },
     });

@@ -39,19 +39,20 @@ CREATE TABLE IF NOT EXISTS forum_sessions (
 CREATE TABLE IF NOT EXISTS forum_topics (
     id SERIAL PRIMARY KEY,
     parent_id INTEGER NOT NULL DEFAULT 0,
+    zorder INTEGER NOT NULL DEFAULT 0,
     title VARCHAR(255) NOT NULL,
     slug VARCHAR(255) NOT NULL,
     description TEXT NOT NULL DEFAULT '',
     created_by INTEGER NOT NULL,
     created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (created_by) REFERENCES forum_users(id),
-    FOREIGN KEY (parent_id) REFERENCES forum_topics(id)
+    FOREIGN KEY (created_by) REFERENCES forum_users(id)
 );
 
 CREATE TABLE IF NOT EXISTS forum_threads (
     id SERIAL PRIMARY KEY,
     topic_id INTEGER NOT NULL,
+    zorder INTEGER NOT NULL DEFAULT 0,
     title VARCHAR(255) NOT NULL,
     slug VARCHAR(255) NOT NULL,
     description TEXT NOT NULL DEFAULT '',
@@ -102,4 +103,5 @@ CREATE TRIGGER forum_posts_updated_at
     ON forum_posts
     FOR EACH ROW
     EXECUTE PROCEDURE updated_datetime();
+
 

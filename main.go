@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
@@ -143,6 +144,18 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	p, err := DB.ListTopics(0)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	b, err := json.Marshal(p)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("%s\n", string(b))
 
 	mux := http.NewServeMux()
 

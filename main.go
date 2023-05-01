@@ -10,18 +10,17 @@ import (
 	"strings"
 	"time"
 
-	"crg.eti.br/go/config"
-	_ "crg.eti.br/go/config/ini"
+	"crg.eti.br/go/forum/config"
+	"crg.eti.br/go/forum/db"
+	"crg.eti.br/go/forum/db/pg"
+	_ "github.com/lib/pq"
 )
-
-type Config struct {
-	Port  int    `ini:"port" cfg:"port" cfgDefault:"8080" cfgHelper:"Port"`
-	DBURL string `ini:"dburl" cfg:"dburl" cfgHelper:"Database URL" cfgRequired:"true"`
-}
 
 var (
 	//go:embed assets/*
 	assets embed.FS
+
+	DB db.DB
 )
 
 func getParameters(prefix string, r *http.Request) ([]string, error) {
@@ -134,13 +133,15 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	cfg := Config{}
-
-	config.File = "forum.ini"
-	err := config.Parse(&cfg)
+	err := config.Load()
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal(err)
+	}
+
+	DB = pg.New()
+	err = DB.Open()
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	mux := http.NewServeMux()
@@ -150,13 +151,13 @@ func main() {
 
 	s := &http.Server{
 		Handler:        mux,
-		Addr:           fmt.Sprintf(":%d", cfg.Port),
+		Addr:           fmt.Sprintf(":%d", config.Port),
 		ReadTimeout:    5 * time.Second,
 		WriteTimeout:   5 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	log.Printf("Listening on port %d\n", cfg.Port)
+	log.Printf("Listening on port %d\n", config.Port)
 	log.Fatal(s.ListenAndServe())
 
 }

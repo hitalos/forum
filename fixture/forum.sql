@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS forum_users (
     nickname VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
     active BOOLEAN NOT NULL DEFAULT TRUE,
-    oauth_data text NOT NULL DEFAULT '',
+    oauth_data JSONB NOT NULL DEFAULT '',
 	created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -51,7 +51,7 @@ CREATE TRIGGER forum_sessions_updated_at
 CREATE TABLE IF NOT EXISTS forum_topics (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    description text NOT NULL DEFAULT '',
+    description TEXT NOT NULL DEFAULT '',
     created_by INTEGER NOT NULL,
     created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS forum_threads (
     id SERIAL PRIMARY KEY,
     topic_id INTEGER NOT NULL,
     title VARCHAR(255) NOT NULL,
-    description text NOT NULL DEFAULT '',
+    description TEXT NOT NULL DEFAULT '',
     created_by INTEGER NOT NULL,
     created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,

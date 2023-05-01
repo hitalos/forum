@@ -61,6 +61,11 @@ func TestMake(t *testing.T) {
 			args: args{"hello 🌍"},
 			want: "hello",
 		},
+		{
+			name: "remove accents",
+			args: args{"hello áéíóúüñçãàù"},
+			want: "hello-aeiouuncaau",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

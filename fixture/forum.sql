@@ -22,16 +22,10 @@ CREATE TABLE IF NOT EXISTS forum_users (
     nickname VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
     active BOOLEAN NOT NULL DEFAULT TRUE,
-    oauth_data JSONB NOT NULL DEFAULT '',
+    oauth_data JSONB NOT NULL DEFAULT '{}',
 	created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-
-CREATE TRIGGER forum_users_updated_at
-    BEFORE UPDATE
-    ON forum_users
-    FOR EACH ROW
-    EXECUTE PROCEDURE updated_datetime();
 
 CREATE TABLE IF NOT EXISTS forum_sessions (
 	uuid uuid NOT NULL DEFAULT uuid(),
@@ -42,28 +36,18 @@ CREATE TABLE IF NOT EXISTS forum_sessions (
     PRIMARY KEY (uuid)
 );
 
-CREATE TRIGGER forum_sessions_updated_at
-    BEFORE UPDATE
-    ON forum_sessions
-    FOR EACH ROW
-    EXECUTE PROCEDURE updated_datetime();
-
 CREATE TABLE IF NOT EXISTS forum_topics (
     id SERIAL PRIMARY KEY,
+    parent_id INTEGER NOT NULL DEFAULT 0,
     title VARCHAR(255) NOT NULL,
     slug VARCHAR(255) NOT NULL,
     description TEXT NOT NULL DEFAULT '',
     created_by INTEGER NOT NULL,
     created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (created_by) REFERENCES forum_users(id)
+    FOREIGN KEY (created_by) REFERENCES forum_users(id),
+    FOREIGN KEY (parent_id) REFERENCES forum_topics(id)
 );
-
-CREATE TRIGGER forum_topics_updated_at
-    BEFORE UPDATE
-    ON forum_topics
-    FOR EACH ROW
-    EXECUTE PROCEDURE updated_datetime();
 
 CREATE TABLE IF NOT EXISTS forum_threads (
     id SERIAL PRIMARY KEY,
@@ -78,12 +62,6 @@ CREATE TABLE IF NOT EXISTS forum_threads (
     FOREIGN KEY (created_by) REFERENCES forum_users(id)
 );
 
-CREATE TRIGGER forum_threads_updated_at
-    BEFORE UPDATE
-    ON forum_threads
-    FOR EACH ROW
-    EXECUTE PROCEDURE updated_datetime();
-
 CREATE TABLE IF NOT EXISTS forum_posts (
     id SERIAL PRIMARY KEY,
     thread_id INTEGER NOT NULL,
@@ -94,6 +72,30 @@ CREATE TABLE IF NOT EXISTS forum_posts (
     FOREIGN KEY (thread_id) REFERENCES forum_threads(id),
     FOREIGN KEY (created_by) REFERENCES forum_users(id)
 );
+
+CREATE TRIGGER forum_users_updated_at
+    BEFORE UPDATE
+    ON forum_users
+    FOR EACH ROW
+    EXECUTE PROCEDURE updated_datetime();
+
+CREATE TRIGGER forum_sessions_updated_at
+    BEFORE UPDATE
+    ON forum_sessions
+    FOR EACH ROW
+    EXECUTE PROCEDURE updated_datetime();
+
+CREATE TRIGGER forum_topics_updated_at
+    BEFORE UPDATE
+    ON forum_topics
+    FOR EACH ROW
+    EXECUTE PROCEDURE updated_datetime();
+
+CREATE TRIGGER forum_threads_updated_at
+    BEFORE UPDATE
+    ON forum_threads
+    FOR EACH ROW
+    EXECUTE PROCEDURE updated_datetime();
 
 CREATE TRIGGER forum_posts_updated_at
     BEFORE UPDATE

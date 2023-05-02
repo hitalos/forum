@@ -34,7 +34,8 @@ func (p *Pg) ListTopics(parent_id int) ([]db.Topic, error) {
 		SELECT 
 			id, 
 			parent_id, 
-			zorder, 
+			zorder,
+			slug,
 			title, 
 			description, 
 			0 as level, 
@@ -44,8 +45,9 @@ func (p *Pg) ListTopics(parent_id int) ([]db.Topic, error) {
 		UNION ALL
 		SELECT 
 			ft.id, 
-			ft.parent_id, 
-			ft.zorder, 
+			ft.parent_id,
+			ft.zorder,
+			ft.slug,
 			ft.title, 
 			ft.description, 
 			tt.level +1 as level, 
@@ -54,9 +56,10 @@ func (p *Pg) ListTopics(parent_id int) ([]db.Topic, error) {
 			JOIN topics_tree tt ON ft.parent_id = tt.id
 		)
 		SELECT 
-			id, 
-			parent_id, 
-			zorder, 
+			id,
+			parent_id,
+			zorder,
+			slug,
 			title, 
 			description, 
 			level, 
@@ -82,7 +85,7 @@ func (p *Pg) ListTopics(parent_id int) ([]db.Topic, error) {
 		}
 		for i, t := range topics {
 			if t.ID == topic.ParentID {
-				topics[i].Subtopic = append(topics[i].Subtopic, topic)
+				topics[i].Topics = append(topics[i].Topics, topic) // add subtopic
 				break
 			}
 		}

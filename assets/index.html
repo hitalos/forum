@@ -11,10 +11,11 @@
       <ui>
         {{ range .Topics }}
           <li><a href="/forum/{{ .Slug }}">{{ .Title }}</a></li>
+          {{ $p_slug := .Slug }}
           {{ if .Topics }} <!-- devia ser recursiva para pegar todos os subtopicos -->
             <ul>
               {{ range .Topics }}
-                <li><a href="/forum/{{ .Slug }}">{{ .Title }}</a></li>
+              <li><a href="/forum/{{ $p_slug }}/{{ .Slug }}">{{ .Title }}</a></li>
               {{ end }}
             </ul>
           {{ end }}

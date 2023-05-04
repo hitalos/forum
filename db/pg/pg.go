@@ -29,8 +29,27 @@ func (p *Pg) Close() error {
 	return p.db.Close()
 }
 
+func (p *Pg) GetTopicID(slug []string) (int, error) {
+	var (
+		id        int
+		parent_id int
+		err       error
+	)
+
+	for _, s := range slug {
+		sqlStatement := `SELECT id FROM forum_topics WHERE slug = $1 AND parent_id = $2`
+		err = p.db.QueryRow(sqlStatement, s, parent_id).Scan(&id)
+		if err != nil {
+			return 0, err
+		}
+		parent_id = id
+	}
+
+	return id, nil
+}
+
 func (p *Pg) ListTopics(parent_id int) ([]db.Topic, error) {
-	sqlStatement := `  WITH RECURSIVE topics_tree AS (
+	sqlStatement := `WITH RECURSIVE topics_tree AS (
 		SELECT 
 			id, 
 			parent_id, 
@@ -79,7 +98,7 @@ func (p *Pg) ListTopics(parent_id int) ([]db.Topic, error) {
 		if err != nil {
 			return nil, err
 		}
-		if topic.ParentID == 0 {
+		if topic.ParentID == 0 || topic.ParentID == parent_id {
 			topics = append(topics, topic)
 			continue
 		}

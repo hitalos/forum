@@ -4,7 +4,6 @@ import (
 	"embed"
 	"fmt"
 	"html/template"
-	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -85,12 +84,19 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	p, err := DB.ListTopics(0)
+	for _, p := range parameters {
+		fmt.Println(">", p)
+	}
+
+	topicID, err := DB.GetTopicID(parameters)
 	if err != nil {
 		log.Println(err)
 	}
 
-	fmt.Printf("%#v\n", p)
+	p, err := DB.ListTopics(topicID)
+	if err != nil {
+		log.Println(err)
+	}
 
 	data := struct {
 		Topics []db.Topic
@@ -101,46 +107,6 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	for k, v := range parameters {
-		fmt.Printf("%d: %s\n", k, v)
-	}
-
-	for k, v := range r.URL.Query() {
-		fmt.Printf("%s: %s\n", k, v)
-	}
-
-	if r.Method == http.MethodPost &&
-		r.Header.Get("Content-Type") == "application/x-www-form-urlencoded" {
-		err := r.ParseForm()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		for k, v := range r.PostForm {
-			fmt.Printf("%s: %s\n", k, v)
-		}
-	}
-
-	if r.Method == http.MethodPost &&
-		r.Header.Get("Content-Type") == "application/json" {
-		b, err := io.ReadAll(r.Body)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		fmt.Printf("%v\n", string(b))
-	}
-
-	fmt.Printf("RemoteAddr: %s\n", r.RemoteAddr)
-	fmt.Printf("Host: %s\n", r.Host)
-	fmt.Printf("RequestURI: %s\n", r.RequestURI)
-	fmt.Printf("URL: %s\n", r.URL)
-	fmt.Printf("Method: %s\n", r.Method)
-	fmt.Printf("Header: %v\n", r.Header)
-
 }
 
 func main() {

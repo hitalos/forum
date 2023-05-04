@@ -15,5 +15,6 @@ type Topic struct {
 type DB interface {
 	Open() error
 	Close() error
+	GetTopicID(slug []string) (int, error)
 	ListTopics(parent_id int) ([]Topic, error)
 }

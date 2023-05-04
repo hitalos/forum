@@ -84,10 +84,6 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	for _, p := range parameters {
-		fmt.Println(">", p)
-	}
-
 	topicID, err := DB.GetTopicID(parameters)
 	if err != nil {
 		log.Println(err)

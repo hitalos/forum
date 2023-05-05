@@ -19,7 +19,8 @@ var (
 	//go:embed assets/*
 	assets embed.FS
 
-	DB db.DB
+	DB     db.DB
+	GitTag string = "dev"
 )
 
 func getParameters(prefix string, r *http.Request) ([]string, error) {
@@ -130,7 +131,8 @@ func main() {
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	log.Printf("Listening on port %d\n", config.Port)
+	log.Printf("Forum version %v", GitTag)
+	log.Printf("Listening on port %d", config.Port)
 	log.Fatal(s.ListenAndServe())
 
 }

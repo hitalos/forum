@@ -18,6 +18,7 @@ import (
 var (
 	//go:embed assets/*
 	assets embed.FS
+	tmpls  = template.Must(template.ParseFS(assets, "assets/*.html"))
 
 	DB     db.DB
 	GitTag string = "dev"
@@ -75,16 +76,6 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	index, err := assets.ReadFile("assets/index.html")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	t, err := template.New("index.html").Parse(string(index))
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	topicID, err := DB.GetTopicID(parameters)
 	if err != nil {
 		log.Println(err)
@@ -100,7 +91,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	}{
 		Topics: p,
 	}
-	err = t.Execute(w, data)
+	err = tmpls.ExecuteTemplate(w, "index.html", data)
 	if err != nil {
 		log.Fatal(err)
 	}

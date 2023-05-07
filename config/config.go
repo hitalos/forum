@@ -21,8 +21,7 @@ func Load() error {
 
 	config.PrefixEnv = "FORUM"
 	config.File = "forum.ini"
-	err := config.Parse(&cfg)
-	if err != nil {
+	if err := config.Parse(&cfg); err != nil {
 		return err
 	}
 
